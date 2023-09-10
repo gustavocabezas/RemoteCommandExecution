@@ -89,6 +89,7 @@
             Controls.Add(btnCancel);
             MinimumSize = new Size(340, 180);
             Name = "CRUDCommandsView";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "CRUD Comandos";
             ResumeLayout(false);
             PerformLayout();
