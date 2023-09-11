@@ -222,8 +222,7 @@
             MinimumSize = new Size(800, 600);
             Name = "MainView";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "Administración de comandos remotos";
-            Load += MainView_Load;
+            Text = "Administración de comandos remotos"; 
             ((System.ComponentModel.ISupportInitialize)pictBoxAddServer).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictBoxRemoveServer).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictBoxModifyServer).EndInit();
