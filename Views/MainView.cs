@@ -8,7 +8,8 @@ namespace RemoteCommandExecution
     public partial class MainView : Form
     {
 
-        string xmlFilePath = "Servers.xml"; // Ruta al archivo XML
+        string xmlFilePathServers = "Servers.xml"; // Ruta al archivo XML
+        string xmlFilePathCommands = "Commands.xml"; // Ruta al archivo XML
 
         public MainView()
         {
@@ -48,7 +49,7 @@ namespace RemoteCommandExecution
                     if (resultado == DialogResult.Yes)
                     {
                         // Eliminar la información del servidor aquí
-                        List<Servers> serverList = LoadServersFromXml(xmlFilePath);
+                        List<Servers> serverList = LoadServersFromXml(xmlFilePathServers);
                         string selectedServerName = listBoxServers.SelectedItem as string;
 
                         if (!string.IsNullOrEmpty(selectedServerName))
@@ -61,7 +62,7 @@ namespace RemoteCommandExecution
                             }
 
                             // Guardar la lista actualizada de servidores en el archivo XML.
-                            using (FileStream fs = new FileStream(xmlFilePath, FileMode.Create))
+                            using (FileStream fs = new FileStream(xmlFilePathServers, FileMode.Create))
                             {
                                 XmlSerializer serializer = new XmlSerializer(typeof(List<Servers>));
                                 serializer.Serialize(fs, serverList);
@@ -77,6 +78,7 @@ namespace RemoteCommandExecution
                 {
                     MessageBox.Show("Por favor seleccione un servidor", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+                LoadServersFromXml();
             }
             catch (Exception ex)
             {
@@ -94,8 +96,7 @@ namespace RemoteCommandExecution
                 if (listBoxServers.SelectedIndex != -1)
                 {
 
-
-                    List<Servers> serverList = LoadServersFromXml(xmlFilePath);
+                    List<Servers> serverList = LoadServersFromXml(xmlFilePathServers);
                     string selectedServerName = listBoxServers.SelectedItem as string;
 
                     if (!string.IsNullOrEmpty(selectedServerName))
@@ -130,7 +131,14 @@ namespace RemoteCommandExecution
             try
             {
                 CRUDCommandsView crudCommandsView = new();
-                crudCommandsView.ShowDialog();
+                DialogResult result = crudCommandsView.ShowDialog();
+
+                if (result == DialogResult.OK)
+                {
+                    listBoxCommands.Items.Clear();
+
+                    // LoadCommandsFromXml();
+                }
             }
             catch (Exception ex)
             {
@@ -151,7 +159,43 @@ namespace RemoteCommandExecution
                     if (resultado == DialogResult.Yes)
                     {
                         // Eliminar el comando aquí
+
+
+
+
+                        //List<Commands> commandList = LoadCommandsFromXml(xmlFilePathCommands);
+                        //string selectedCommandName = listBoxCommands.SelectedItem as string;
+
+                        //if (!string.IsNullOrEmpty(selectedCommandName))
+                        //{
+
+
+
+
+                        // Buscar el servidor con el nombre especificado y eliminarlo.
+
+
+
+                        //Servers commandToRemove = commandList.FirstOrDefault(s => s.Command == selectedCommandName);
+                        //if (commandToRemove != null)
+                        //{
+                        //    commandList.Remove(commandToRemove);
+                        //}
+
+                        // Guardar la lista actualizada de comandos en el archivo XML.
+
+                        //using (FileStream fs = new FileStream(xmlFilePathServers, FileMode.Create))
+                        //{
+                        //    XmlSerializer serializer = new XmlSerializer(typeof(List<Servers>));
+                        //    serializer.Serialize(fs, commandList);
+                        //}
+
+                        // Opcional: Limpia la selección.
+                        //listBoxCommands.ClearSelected();
+                        //listBoxCommands.Items.Clear();
+                        //}
                     }
+
                 }
                 else
                 {
@@ -174,11 +218,22 @@ namespace RemoteCommandExecution
                 if (listBoxCommands.SelectedIndex != -1)
                 {
 
-                    CRUDCommandsView crudCommandsView = new()
-                    {
-                        // Aquí definir la referencia a la ventana
-                    };
-                    crudCommandsView.ShowDialog();
+                    //List<Commands> commandsList = LoadCommandsFromXml(xmlFilePathCommands);
+                    //string selectedCommand = listBoxCommands.SelectedItem as string;
+
+                    //if (!string.IsNullOrEmpty(selectedCommand))
+                    //{
+                    //    CRUDCommandsView commandCRUD = new(selectedCommand);
+
+                    //    DialogResult result = commandCRUD.ShowDialog();
+
+                    //    if (result == DialogResult.OK)
+                    //    {
+                    //        listBoxCommands.Items.Clear();
+                    //        LoadCommandsFromXml();
+                    //    }
+                    //}
+
                 }
                 else
                 {
@@ -213,10 +268,10 @@ namespace RemoteCommandExecution
         {
 
 
-            if (File.Exists(xmlFilePath))
+            if (File.Exists(xmlFilePathServers))
             {
                 // Leer los servidores desde el archivo XML y agregarlos al ListBox.
-                using (FileStream fs = new FileStream(xmlFilePath, FileMode.Open))
+                using (FileStream fs = new FileStream(xmlFilePathServers, FileMode.Open))
                 {
                     XmlSerializer serializer = new XmlSerializer(typeof(List<Servers>));
                     List<Servers> serverList = (List<Servers>)serializer.Deserialize(fs);
@@ -231,7 +286,7 @@ namespace RemoteCommandExecution
             {
                 // Si el archivo XML no existe, crea uno nuevo archivo xml para guardar la informacion.
                 List<Servers> newServerList = new List<Servers>();
-                using (FileStream fs = new FileStream(xmlFilePath, FileMode.Create))
+                using (FileStream fs = new FileStream(xmlFilePathServers, FileMode.Create))
                 {
                     XmlSerializer serializer = new XmlSerializer(typeof(List<Servers>));
                     serializer.Serialize(fs, newServerList);

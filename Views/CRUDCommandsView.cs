@@ -7,7 +7,7 @@ namespace RemoteCommandExecution.Views
         public int _commandId { get; set; } = 0;
         private string _command;
 
-        public CRUDCommandsView()
+        public CRUDCommandsView(string command = "")
         {
             InitializeComponent();
         }
