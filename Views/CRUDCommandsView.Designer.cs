@@ -31,7 +31,7 @@
             btnCancel = new Button();
             btnAccept = new Button();
             label1 = new Label();
-            textBox1 = new TextBox();
+            textboxComando = new TextBox();
             SuspendLayout();
             // 
             // btnCancel
@@ -69,28 +69,28 @@
             label1.TabIndex = 2;
             label1.Text = "Comando";
             // 
-            // textBox1
+            // textboxComando
             // 
-            textBox1.Location = new Point(12, 27);
-            textBox1.Multiline = true;
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(300, 78);
-            textBox1.TabIndex = 3;
-            textBox1.TextChanged += textBoxCommand_TextChanged;
+            textboxComando.Location = new Point(12, 27);
+            textboxComando.Multiline = true;
+            textboxComando.Name = "textboxComando";
+            textboxComando.Size = new Size(300, 78);
+            textboxComando.TabIndex = 3;
             // 
             // CRUDCommandsView
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(324, 141);
-            Controls.Add(textBox1);
+            Controls.Add(textboxComando);
             Controls.Add(label1);
             Controls.Add(btnAccept);
             Controls.Add(btnCancel);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             MinimumSize = new Size(340, 180);
             Name = "CRUDCommandsView";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "CRUD Comandos";
+            Text = "Comando";
             ResumeLayout(false);
             PerformLayout();
         }
@@ -100,6 +100,6 @@
         private Button btnCancel;
         private Button btnAccept;
         private Label label1;
-        private TextBox textBox1;
+        private TextBox textboxComando;
     }
 }

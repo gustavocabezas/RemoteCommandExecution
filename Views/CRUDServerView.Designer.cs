@@ -132,11 +132,11 @@
             button2.UseVisualStyleBackColor = false;
             button2.Click += buttonAccept_Click;
             // 
-            // ServerCRUD
+            // CRUDServerView
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(324, 281);
+            ClientSize = new Size(333, 281);
             Controls.Add(button2);
             Controls.Add(button1);
             Controls.Add(textBoxPassword);
@@ -147,10 +147,12 @@
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
-            MinimumSize = new Size(340, 320);
-            Name = "ServerCRUD";
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MinimumSize = new Size(340, 318);
+            Name = "CRUDServerView";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "Server CRUD";
+            Text = "Servidor";
+            Load += CRUDServerView_Load;
             ResumeLayout(false);
             PerformLayout();
         }

@@ -167,6 +167,8 @@
             txbResponseCommand.Location = new Point(12, 249);
             txbResponseCommand.Multiline = true;
             txbResponseCommand.Name = "txbResponseCommand";
+            txbResponseCommand.ReadOnly = true;
+            txbResponseCommand.ScrollBars = ScrollBars.Vertical;
             txbResponseCommand.Size = new Size(760, 300);
             txbResponseCommand.TabIndex = 13;
             // 
@@ -219,10 +221,12 @@
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
-            MinimumSize = new Size(800, 600);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MinimumSize = new Size(800, 598);
             Name = "MainView";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "Administración de comandos remotos"; 
+            Text = "Administración de comandos remotos";
+            Load += MainView_Load;
             ((System.ComponentModel.ISupportInitialize)pictBoxAddServer).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictBoxRemoveServer).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictBoxModifyServer).EndInit();

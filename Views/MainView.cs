@@ -1,5 +1,6 @@
 using RemoteCommandExecution.Models;
 using RemoteCommandExecution.Views;
+using Renci.SshNet;
 using System.Diagnostics;
 using System.Xml.Serialization;
 
@@ -9,12 +10,15 @@ namespace RemoteCommandExecution
     {
 
         string xmlFilePathServers = "Servers.xml"; // Ruta al archivo XML
-        string xmlFilePathCommands = "Commands.xml"; // Ruta al archivo XML
+        string xmlFilePathCommands = "Comandos.xml"; // Ruta al archivo XML
 
         public MainView()
         {
             InitializeComponent();
             LoadServersFromXml();
+            LoadCommandsFromXml();
+
+
         }
 
         private void pictureBoxAddServer_Click(object sender, EventArgs e)
@@ -78,12 +82,15 @@ namespace RemoteCommandExecution
                 {
                     MessageBox.Show("Por favor seleccione un servidor", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+                listBoxServers.Items.Clear();
                 LoadServersFromXml();
             }
             catch (Exception ex)
             {
 #if DEBUG
                 Debug.WriteLine(ex.Message);
+                MessageBox.Show("Ha ocurrido un error agregando el servidor", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
                 Debugger.Break();
 #endif
             }
@@ -91,11 +98,11 @@ namespace RemoteCommandExecution
 
         private void pictureBoxModifyServer_Click(object sender, EventArgs e)
         {
+
             try
             {
                 if (listBoxServers.SelectedIndex != -1)
                 {
-
                     List<Servers> serverList = LoadServersFromXml(xmlFilePathServers);
                     string selectedServerName = listBoxServers.SelectedItem as string;
 
@@ -130,14 +137,14 @@ namespace RemoteCommandExecution
         {
             try
             {
-                CRUDCommandsView crudCommandsView = new();
+                CRUDCommandsView crudCommandsView = new CRUDCommandsView();
                 DialogResult result = crudCommandsView.ShowDialog();
 
                 if (result == DialogResult.OK)
                 {
                     listBoxCommands.Items.Clear();
+                    LoadCommandsFromXml();
 
-                    // LoadCommandsFromXml();
                 }
             }
             catch (Exception ex)
@@ -159,48 +166,35 @@ namespace RemoteCommandExecution
                     if (resultado == DialogResult.Yes)
                     {
                         // Eliminar el comando aquí
+                        List<Commands> commandList = LoadCommandsFromXml(xmlFilePathCommands);
+                        string selectedCommandText = listBoxCommands.SelectedItem as string;
 
+                        if (!string.IsNullOrEmpty(selectedCommandText))
+                        {
+                            // Buscar el comando con el texto especificado y eliminarlo.
+                            Commands commandToRemove = commandList.FirstOrDefault(c => c.Command == selectedCommandText);
+                            if (commandToRemove != null)
+                            {
+                                commandList.Remove(commandToRemove);
+                            }
+                            // Guardar la lista actualizada de servidores en el archivo XML.
+                            using (FileStream fc = new FileStream(xmlFilePathCommands, FileMode.Create))
+                            {
+                                XmlSerializer serializer = new XmlSerializer(typeof(List<Commands>));
+                                serializer.Serialize(fc, commandList);
+                            }
 
-
-
-                        //List<Commands> commandList = LoadCommandsFromXml(xmlFilePathCommands);
-                        //string selectedCommandName = listBoxCommands.SelectedItem as string;
-
-                        //if (!string.IsNullOrEmpty(selectedCommandName))
-                        //{
-
-
-
-
-                        // Buscar el servidor con el nombre especificado y eliminarlo.
-
-
-
-                        //Servers commandToRemove = commandList.FirstOrDefault(s => s.Command == selectedCommandName);
-                        //if (commandToRemove != null)
-                        //{
-                        //    commandList.Remove(commandToRemove);
-                        //}
-
-                        // Guardar la lista actualizada de comandos en el archivo XML.
-
-                        //using (FileStream fs = new FileStream(xmlFilePathServers, FileMode.Create))
-                        //{
-                        //    XmlSerializer serializer = new XmlSerializer(typeof(List<Servers>));
-                        //    serializer.Serialize(fs, commandList);
-                        //}
-
-                        // Opcional: Limpia la selección.
-                        //listBoxCommands.ClearSelected();
-                        //listBoxCommands.Items.Clear();
-                        //}
+                            // Limpiar la selección y actualizar la lista de comandos.
+                            listBoxCommands.Items.Clear();
+                        }
                     }
-
                 }
                 else
                 {
                     MessageBox.Show("Por favor seleccione un comando", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+                listBoxCommands.Items.Clear();
+                LoadCommandsFromXml();
             }
             catch (Exception ex)
             {
@@ -217,27 +211,25 @@ namespace RemoteCommandExecution
             {
                 if (listBoxCommands.SelectedIndex != -1)
                 {
+                    List<Commands> commandList = LoadCommandsFromXml(xmlFilePathCommands);
+                    string selectedCommandText = listBoxCommands.SelectedItem as string;
 
-                    //List<Commands> commandsList = LoadCommandsFromXml(xmlFilePathCommands);
-                    //string selectedCommand = listBoxCommands.SelectedItem as string;
+                    if (!string.IsNullOrEmpty(selectedCommandText))
+                    {
+                        CRUDCommandsView commandCRUD = new(selectedCommandText);
 
-                    //if (!string.IsNullOrEmpty(selectedCommand))
-                    //{
-                    //    CRUDCommandsView commandCRUD = new(selectedCommand);
+                        DialogResult result = commandCRUD.ShowDialog();
 
-                    //    DialogResult result = commandCRUD.ShowDialog();
-
-                    //    if (result == DialogResult.OK)
-                    //    {
-                    //        listBoxCommands.Items.Clear();
-                    //        LoadCommandsFromXml();
-                    //    }
-                    //}
-
+                        if (result == DialogResult.OK)
+                        {
+                            listBoxCommands.Items.Clear();
+                            LoadCommandsFromXml();
+                        }
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("Por favor seleccione un servidor", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Por favor seleccione un comando", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
@@ -253,7 +245,68 @@ namespace RemoteCommandExecution
         {
             try
             {
-                // Aquí va la respuesta al ejecutar el código en el servidor 
+                string selectedServerName = listBoxServers.SelectedItem as string;
+                string selectedCommandText = listBoxCommands.SelectedItem as string;
+
+                if (string.IsNullOrEmpty(selectedServerName) || string.IsNullOrEmpty(selectedCommandText))
+                {
+                    MessageBox.Show("Por favor seleccione el servidor y comando que desea ejecutar", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                string ip = "";
+                string user = "";
+                string password = "";
+
+                List<Servers> serverList = LoadServersFromXml(xmlFilePathServers);
+                Servers serverInfo = serverList.FirstOrDefault(s => s.Name == selectedServerName);
+
+                if (serverInfo != null)
+                {
+                    ip = serverInfo.Ip;
+                    user = serverInfo.User;
+                    password = serverInfo.Password;
+                }
+
+                using (var client = new SshClient(ip, user, password))
+                {
+                    try
+                    {
+                        client.Connect();
+
+                        List<Commands> commandList = LoadCommandsFromXml(xmlFilePathCommands);
+                        string selectedCommand = commandList.FirstOrDefault(c => c.Command == selectedCommandText)?.Command;
+
+                        if (selectedCommand != null)
+                        {
+                            var cmd = client.RunCommand(selectedCommand);
+                            string result = cmd.Result;
+
+                            if (string.IsNullOrEmpty(result))
+                            {
+                                txbResponseCommand.AppendText("Se ha conectado al servidor correctamen" + Environment.NewLine);
+                                txbResponseCommand.AppendText(selectedCommand + Environment.NewLine + result);
+                            }
+                            else
+                            {
+                                txbResponseCommand.AppendText("Se ha conectado al servidor correctamen" + Environment.NewLine);
+                                txbResponseCommand.AppendText(selectedCommand + Environment.NewLine + result + Environment.NewLine);
+                            }
+                        }
+                        else
+                        {
+                            txbResponseCommand.AppendText("No se pudo ejecutar el comando" + Environment.NewLine);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        txbResponseCommand.AppendText("No se pudo conectar al servidor" + Environment.NewLine);
+                    }
+                    finally
+                    {
+                        client.Disconnect();
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -263,11 +316,52 @@ namespace RemoteCommandExecution
 #endif
             }
         }
+        private void LoadCommandsFromXml()
+        {
+            if (File.Exists(xmlFilePathCommands))
+            {
+                // Leer los comandos desde el archivo XML y agregarlos al ListBox.
+                using (FileStream fs = new FileStream(xmlFilePathCommands, FileMode.Open))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(List<Commands>));
+                    List<Commands> commandList = (List<Commands>)serializer.Deserialize(fs);
+
+                    foreach (Commands command in commandList)
+                    {
+                        listBoxCommands.Items.Add(command.Command); // Agregar el comando al ListBox de la pantalla.
+                    }
+                }
+            }
+            else
+            {
+                // Si el archivo XML no existe, crea uno nuevo archivo XML para guardar la información.
+                List<Commands> newCommandList = new List<Commands>();
+                using (FileStream fs = new FileStream(xmlFilePathCommands, FileMode.Create))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(List<Commands>));
+                    serializer.Serialize(fs, newCommandList);
+                }
+                // MessageBox.Show("Se ha creado un nuevo archivo XML de comandos.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private List<Commands> LoadCommandsFromXml(string xmlFilePath)
+        {
+            List<Commands> commandList = new List<Commands>();
+
+            if (File.Exists(xmlFilePath))
+            {
+                using (FileStream fs = new FileStream(xmlFilePath, FileMode.Open))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(List<Commands>));
+                    commandList = (List<Commands>)serializer.Deserialize(fs);
+                }
+            }
+            return commandList;
+        }
 
         private void LoadServersFromXml()
         {
-
-
             if (File.Exists(xmlFilePathServers))
             {
                 // Leer los servidores desde el archivo XML y agregarlos al ListBox.
@@ -294,7 +388,6 @@ namespace RemoteCommandExecution
                 // MessageBox.Show("Se ha creado un nuevo archivo XML de servidores.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
-
         private List<Servers> LoadServersFromXml(string xmlFilePath)
         {
             List<Servers> serverList = new List<Servers>();
@@ -308,6 +401,11 @@ namespace RemoteCommandExecution
                 }
             }
             return serverList;
+        }
+
+        private void MainView_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

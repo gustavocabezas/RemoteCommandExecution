@@ -1,4 +1,5 @@
 ﻿using RemoteCommandExecution.Models;
+using Renci.SshNet;
 using System.Diagnostics;
 using System.Xml.Serialization;
 
@@ -75,68 +76,103 @@ namespace RemoteCommandExecution.Views
 
         private void buttonAccept_Click(object sender, EventArgs e)
         {
-            // Verifique la conexión con el servidor Linux aquí
-
-            string name = textBoxName.Text;
-            string ip = textBoxIp.Text;
-            string user = textBoxUser.Text;
-            string password = textBoxPassword.Text;
-
-            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(ip) || string.IsNullOrEmpty(user) || string.IsNullOrEmpty(password))
-            {
-                MessageBox.Show("Por favor complete todos los campos", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            Servers serverData = new Servers
-            {
-                Name = name,
-                Ip = ip,
-                User = user,
-                Password = password
-            };
-
             try
             {
-                if (!String.IsNullOrEmpty(_serverName))
+                string name = textBoxName.Text.Trim();
+                string ip = textBoxIp.Text.Trim();
+                string user = textBoxUser.Text.Trim();
+                string password = textBoxPassword.Text.Trim();
+
+                try
                 {
-                    // Modificar los datos del servidor aquí
-                    bool success = ModifyServerData(_serverId, serverData);
-                    if (success)
+
+                    if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(ip) || string.IsNullOrEmpty(user) || string.IsNullOrEmpty(password))
                     {
-                        MessageBox.Show("Se ha modificado la información del servidor", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        ServerAdded?.Invoke(this, EventArgs.Empty);
-                        DialogResult = DialogResult.OK;
-                        this.Close();
+                        MessageBox.Show("Ha ocurrido un error agregando el servidor, por favor complete todos los campos", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
                     }
                     else
                     {
-                        MessageBox.Show("Ha ocurrido un error modificando el servidor", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        using (var client = new SshClient(ip, user, password))
+                        {
+                            client.Connect();
+
+                            Servers serverData = new Servers
+                            {
+                                Name = name,
+                                Ip = ip,
+                                User = user,
+                                Password = password
+                            };
+
+                            if (_serverId > 0)
+                            {
+                                try
+                                {
+                                    bool success = ModifyServerData(_serverId, serverData);
+                                    if (success)
+                                    {
+                                        MessageBox.Show("Se ha modificado la información del servidor", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                        ServerAdded?.Invoke(this, EventArgs.Empty);
+                                        DialogResult = DialogResult.OK;
+                                        this.Close();
+                                    }
+                                    else
+                                    {
+                                        MessageBox.Show("Ha ocurrido un error modificando el servidor", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show("Ha ocurrido un error modificando el servidor " + $"Error: {ex.Message}");
+                                }
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    bool success = AddServerData(serverData);
+                                    if (success)
+                                    {
+                                        MessageBox.Show("Se ha agregado un nuevo servidor", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                        ServerAdded?.Invoke(this, EventArgs.Empty);
+                                        DialogResult = DialogResult.OK;
+                                        this.Close();
+                                    }
+                                    else
+                                    {
+                                        MessageBox.Show("Ha ocurrido un error agregando el servidor", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show("Ha ocurrido un error agregando el servidor " + $"Error: {ex.Message}");
+                                }
+                                finally
+                                {
+                                    client.Disconnect();
+                                }
+                            }
+                        }
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    // Agregar el servidor
-                    bool success = AddServerData(serverData);
-                    if (success)
+                    if (_serverId > 0)
                     {
-                        MessageBox.Show("Se ha agregado un nuevo servidor", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        ServerAdded?.Invoke(this, EventArgs.Empty);
-                        DialogResult = DialogResult.OK;
-                        this.Close();
+                        MessageBox.Show("Ha ocurrido un error modificando el servidor " + $"Error: {ex.Message}");
                     }
                     else
                     {
-                        MessageBox.Show("Ha ocurrido un error agregando el servidor", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Ha ocurrido un error agregando el servidor " + $"Error: {ex.Message}");
                     }
                 }
+
             }
             catch (Exception ex)
             {
-#if DEBUG
                 Debug.WriteLine(ex.Message);
                 Debugger.Break();
-#endif
             }
         }
 
@@ -201,6 +237,11 @@ namespace RemoteCommandExecution.Views
             }
 
             return maxId + 1;
+        }
+
+        private void CRUDServerView_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
